@@ -10,7 +10,7 @@ module.exports = {
     filename: 'webgl.bundle.js',
   },
   module: {
-    rules: [{ test: /\.vert|\.frag$/, use: 'raw-loader' }],
+    rules: [{ test: /\.vert|\.frag$/, type: 'asset/source', }],
   },
   plugins: [new HtmlWebpackPlugin({ template: './index.html' })],
 };

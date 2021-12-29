@@ -1,19 +1,11 @@
 // HelloPint2.js (c) 2012 matsuda
 // Vertex shader program
-var VSHADER_SOURCE = 
-  'attribute vec4 a_Position;\n' + // attribute variable
-  'void main() {\n' +
-  '  gl_Position = a_Position;\n' +
-  '  gl_PointSize = 10.0;\n' +
-  '}\n'; 
+import VSHADER_SOURCE from './HelloPoint2.vert';
 
 // Fragment shader program
-var FSHADER_SOURCE = 
-  'void main() {\n' +
-  '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
-  '}\n';
+import FSHADER_SOURCE from './HelloPoint2.frag';
 
-function main() {
+export function main() {
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
 
@@ -37,8 +29,16 @@ function main() {
     return;
   }
 
+  // Get the storage location of a_PointSize
+  var a_PointSize = gl.getAttribLocation(gl.program, 'a_PointSize');
+  if (a_PointSize < 0) {
+    console.log('Failed to get the storage location of a_PointSize');
+    return;
+  }
+
   // Pass vertex position to attribute variable
   gl.vertexAttrib3f(a_Position, 0.0, 0.0, 0.0);
+  gl.vertexAttrib1f(a_PointSize, 3.0);
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
