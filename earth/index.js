@@ -50,9 +50,17 @@ let rotationAngle = 0;
 const degreeXSecond = 10;
 let time = Date.now();
 const modelMatrix = new Matrix4();
+const normalMatrix = new Matrix4();
 let u_ModelMatrix;
+let u_NormalMatrix;
+let u_AmbientColor;
+let u_DirColor;
+let u_DirDir;
 let gl;
 let n;
+const ambientLightColor = new Vector3([0.5, 0.5, 0.5]);
+const dirLightColor = new Vector3([1.0, 1.0, 1.0]);
+const dirLightDir = new Vector3([1, 1, -0.5]).normalize();
 
 export function main() {
   // Retrieve <canvas> element
@@ -78,6 +86,34 @@ export function main() {
     console.log("Failed to get the storage location of u_ModelMatrix");
     return;
   }
+
+  u_NormalMatrix = gl.getUniformLocation(gl.program, "u_NormalMatrix");
+  if (!u_NormalMatrix) {
+    console.log("Failed to get the storage location of u_NormalMatrix");
+    return;
+  }
+
+  u_AmbientColor = gl.getUniformLocation(gl.program, "u_AmbientColor");
+  if (!u_AmbientColor) {
+    console.log("Failed to get the storage location of u_AmbientColor");
+    return;
+  }
+
+  u_DirColor = gl.getUniformLocation(gl.program, "u_DirColor");
+  if (!u_DirColor) {
+    console.log("Failed to get the storage location of u_DirColor");
+    return;
+  }
+
+  u_DirDir = gl.getUniformLocation(gl.program, "u_DirDir");
+  if (!u_DirDir) {
+    console.log("Failed to get the storage location of u_DirDir");
+    return;
+  }
+
+  gl.uniform3fv(u_AmbientColor, ambientLightColor.elements);
+  gl.uniform3fv(u_DirColor, dirLightColor.elements);
+  gl.uniform3fv(u_DirDir, dirLightDir.elements);
 
   // Set the vertex information
   n = initVertexBuffers();
@@ -120,6 +156,15 @@ function initVertexBuffers() {
   }
   gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, FSIZE * 8, 0);
   gl.enableVertexAttribArray(a_Position); // Enable the assignment of the buffer object
+
+  //Get the storage location of a_Normal, assign and enable buffer
+  var a_Normal = gl.getAttribLocation(gl.program, "a_Normal");
+  if (a_Normal < 0) {
+    console.log("Failed to get the storage location of a_Normal");
+    return -1;
+  }
+  gl.vertexAttribPointer(a_Normal, 3, gl.FLOAT, false, FSIZE * 8, FSIZE * 3);
+  gl.enableVertexAttribArray(a_Normal); // Enable the assignment of the buffer object
 
   // Get the storage location of a_TexCoord
   var a_TexCoord = gl.getAttribLocation(gl.program, "a_TexCoord");
@@ -185,8 +230,10 @@ function tick() {
   const elapsedSeconds = (Date.now() - time) / 1000;
   rotationAngle = (degreeXSecond * elapsedSeconds) % 360;
   modelMatrix.setRotate(rotationAngle, 0, 1, 0);
+  normalMatrix.setInverseOf(modelMatrix).transpose();
   gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
-  gl.clear(gl.COLOR_BUFFER_BIT); // Clear <canvas>
+  gl.uniformMatrix4fv(u_NormalMatrix, false, normalMatrix.elements);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // Clear <canvas>
 
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, n); // Draw the rectangle
   requestAnimationFrame(tick);
